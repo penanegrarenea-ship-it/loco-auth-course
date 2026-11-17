@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>三种令牌不要混用 · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="01-map.html">这棵树谁负责什么</a></li><li><a href="02-columns.html">users 列以 SQLite 为准</a></li><li><a href="03-register.html">注册写入哪些列</a></li><li><a href="04-verify.html">验证令牌没有过期</a></li><li><a href="05-login.html">登录不要求已验证</a></li><li><a href="06-jwt.html">JWT 与 current</a></li><li><a href="07-reset.html">过期重置仍返回 200</a></li><li><a href="08-resend.html">重发验证信的三种结果</a></li><li><a href="09-magic.html">magic link 只收两个域名</a></li><li><a href="10-tokens.html" aria-current="page">三种令牌不要混用</a></li><li><a href="11-authz.html">认证通过不等于授权</a></li><li><a href="12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="../reference/http.html">实测 HTTP 结果</a></li><li><a href="../reference/powershell.html">PowerShell 命令</a></li><li><a href="../reference/untested.html">没测过的边界</a></li><li><a href="../reference/extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      <h1>三种令牌不要混用</h1>
+<p class="kicker">用途、存放、过期、消费，四列分开看。</p>
+<h2>结果</h2>
+<table>
+  <thead><tr><th>令牌</th><th>存放</th><th>过期</th><th>消费</th></tr></thead>
+  <tbody>
+    <tr><td>邮箱验证</td><td>email_verification_token</td><td>不判断</td><td>验证成功后置 NULL</td></tr>
+    <tr><td>重置密码</td><td>reset_token，另有 reset_sent_at</td><td>发送后 30 分钟</td><td>重置成功后两列都空</td></tr>
+    <tr><td>magic link</td><td>magic_link_token，另有过期列</td><td>5 分钟</td><td>兑换成功后两列都空</td></tr>
+    <tr><td>JWT</td><td>不入库，只在响应里</td><td>exp，配置 604800 秒</td><td>无服务端消费记录</td></tr>
+  </tbody>
+</table>
+<h2>说明</h2>
+<p>验证和重置的材料是 UUID 字符串。magic link 是 32 位随机字母数字。JWT 是 HS512 三段 compact。四者不能互相拿去调用对方的路由。HTTP 成功响应不回带前三种令牌，只回带 JWT。</p>
+
+<form class="quiz" data-answer="a">
+  <fieldset>
+    <legend>哪一种材料写在用户表里，但查找时不看时间？</legend>
+    <label><input type="radio" name="choice" value="a"> <span class="choice">邮箱验证令牌写在表里，查找不看发送时间　　　　　　</span></label><label><input type="radio" name="choice" value="b"> <span class="choice">重置令牌写在表里，查找时完全不看时间　　　　　　　</span></label><label><input type="radio" name="choice" value="c"> <span class="choice">magic link 写在表里，查找时不看过期列　</span></label><label><input type="radio" name="choice" value="d"> <span class="choice">JWT 写在用户表里，查找时不看 exp 声明　　</span></label>
+  </fieldset>
+  <button type="submit">核对</button>
+  <p class="feedback" role="status" aria-live="polite"></p>
+  <noscript><p>不运行脚本时的答案：A。验证令牌有发送时间列，查找函数不用它。</p></noscript>
+</form>
+
+<p class="pager"><a href="09-magic.html">上一课：magic link 只收两个域名</a><a href="11-authz.html">下一课：认证通过不等于授权</a></p>
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>

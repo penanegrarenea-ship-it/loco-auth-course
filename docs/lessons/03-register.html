@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>注册写入哪些列 · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="01-map.html">这棵树谁负责什么</a></li><li><a href="02-columns.html">users 列以 SQLite 为准</a></li><li><a href="03-register.html" aria-current="page">注册写入哪些列</a></li><li><a href="04-verify.html">验证令牌没有过期</a></li><li><a href="05-login.html">登录不要求已验证</a></li><li><a href="06-jwt.html">JWT 与 current</a></li><li><a href="07-reset.html">过期重置仍返回 200</a></li><li><a href="08-resend.html">重发验证信的三种结果</a></li><li><a href="09-magic.html">magic link 只收两个域名</a></li><li><a href="10-tokens.html">三种令牌不要混用</a></li><li><a href="11-authz.html">认证通过不等于授权</a></li><li><a href="12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="../reference/http.html">实测 HTTP 结果</a></li><li><a href="../reference/powershell.html">PowerShell 命令</a></li><li><a href="../reference/untested.html">没测过的边界</a></li><li><a href="../reference/extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      <h1>注册写入哪些列</h1>
+<p class="kicker">先看写入，再看 200 代表什么。</p>
+<h2>结果</h2>
+<pre><code>POST /api/auth/register
+HTTP 200
+null
+
+同一邮箱再 POST 一次
+HTTP 200
+null
+该邮箱的行数仍是 1</code></pre>
+<p>控制器 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/controllers/auth.rs#L46-L72">saas_app/src/controllers/auth.rs:46-72</a>。插入 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/models/users.rs#L233-L266">saas_app/src/models/users.rs:233-266</a>。插入前补 <code>pid</code> 和 <code>lo-</code> 前缀的 <code>api_key</code>：<a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/models/users.rs#L45-L59">saas_app/src/models/users.rs:45-59</a>。</p>
+<h2>说明</h2>
+<p>写入的业务列是邮箱、密码哈希、姓名。哈希在框架 <a href="https://github.com/loco-rs/loco/blob/3ddc279740ebf0516403ca8f7028ce481d616a02/src/hash.rs#L24-L36">src/hash.rs:24-36</a>：Argon2id，版本 0x13，默认参数 m=19456、t=2、p=1。随后 <code>set_email_verification_sent</code> 写入发送时间和一枚 UUID 验证令牌。<a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/models/users.rs#L290-L297">saas_app/src/models/users.rs:290-297</a>。<code>email_verified_at</code> 仍是 NULL。</p>
+<p>重复邮箱在模型里是 <code>EntityAlreadyExists</code>，控制器吞掉错误并返回 JSON <code>null</code>。这不是 409。注册不看邮箱域名。</p>
+
+<form class="quiz" data-answer="b">
+  <fieldset>
+    <legend>重复邮箱再次注册时，实测响应是？</legend>
+    <label><input type="radio" name="choice" value="a"> <span class="choice">HTTP 409，JSON 说明这个邮箱已经注册过　　</span></label><label><input type="radio" name="choice" value="b"> <span class="choice">HTTP 200，正文 null，表里仍然只有一行　　</span></label><label><input type="radio" name="choice" value="c"> <span class="choice">HTTP 200，正文 null，表里变成两行同邮箱　</span></label><label><input type="radio" name="choice" value="d"> <span class="choice">HTTP 422，因为第二次请求缺少验证令牌　　　　　</span></label>
+  </fieldset>
+  <button type="submit">核对</button>
+  <p class="feedback" role="status" aria-live="polite"></p>
+  <noscript><p>不运行脚本时的答案：B。两次都是 200 和 null，COUNT 仍为 1。</p></noscript>
+</form>
+
+<p class="pager"><a href="02-columns.html">上一课：users 列以 SQLite 为准</a><a href="04-verify.html">下一课：验证令牌没有过期</a></p>
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>

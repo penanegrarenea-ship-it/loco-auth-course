@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>过期重置仍返回 200 · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="01-map.html">这棵树谁负责什么</a></li><li><a href="02-columns.html">users 列以 SQLite 为准</a></li><li><a href="03-register.html">注册写入哪些列</a></li><li><a href="04-verify.html">验证令牌没有过期</a></li><li><a href="05-login.html">登录不要求已验证</a></li><li><a href="06-jwt.html">JWT 与 current</a></li><li><a href="07-reset.html" aria-current="page">过期重置仍返回 200</a></li><li><a href="08-resend.html">重发验证信的三种结果</a></li><li><a href="09-magic.html">magic link 只收两个域名</a></li><li><a href="10-tokens.html">三种令牌不要混用</a></li><li><a href="11-authz.html">认证通过不等于授权</a></li><li><a href="12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="../reference/http.html">实测 HTTP 结果</a></li><li><a href="../reference/powershell.html">PowerShell 命令</a></li><li><a href="../reference/untested.html">没测过的边界</a></li><li><a href="../reference/extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      <h1>过期重置仍返回 200</h1>
+<p class="kicker">200 在这里不表示密码已经换掉。</p>
+<h2>结果</h2>
+<pre><code>POST /api/auth/forgot  未知邮箱或已知邮箱都是 HTTP 200，正文 null
+已知邮箱：reset_token 和 reset_sent_at 被写上
+
+POST /api/auth/reset  错误 token：HTTP 200，旧密码仍能登录
+把 reset_sent_at 改成 2000-01-01 再重置：HTTP 200
+新密码登录 401，旧密码登录 200
+
+未过期的重置：HTTP 200，两列清空，旧密码 401，新密码 200</code></pre>
+<p>忘记密码 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/controllers/auth.rs#L98-L116">saas_app/src/controllers/auth.rs:98-116</a>。重置 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/controllers/auth.rs#L120-L133">saas_app/src/controllers/auth.rs:120-133</a>。30 分钟判断 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/models/users.rs#L12-L12">RESET_TOKEN_EXPIRATION_MIN</a> 和 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/models/users.rs#L152-L180">saas_app/src/models/users.rs:152-180</a>。成功后清空 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/models/users.rs#L342-L352">saas_app/src/models/users.rs:342-352</a>。</p>
+<h2>说明</h2>
+<p>找不到或已过期都走进同一个分支，返回 JSON <code>null</code>，不改密码。调用方不能用状态码区分“换好了”和“令牌无效”。没有测刚好 30 分钟的边界，只测了明显过期。</p>
+
+<form class="quiz" data-answer="b">
+  <fieldset>
+    <legend>重置令牌已经过期时，接口和密码分别怎样？</legend>
+    <label><input type="radio" name="choice" value="a"> <span class="choice">HTTP 401，密码保持不变，旧密码不能登录　　</span></label><label><input type="radio" name="choice" value="b"> <span class="choice">HTTP 200，密码保持不变，旧密码仍然能登录　</span></label><label><input type="radio" name="choice" value="c"> <span class="choice">HTTP 200，密码改成新值，旧密码不能再登录　</span></label><label><input type="radio" name="choice" value="d"> <span class="choice">HTTP 404，因为过期令牌会从用户行里删除　　</span></label>
+  </fieldset>
+  <button type="submit">核对</button>
+  <p class="feedback" role="status" aria-live="polite"></p>
+  <noscript><p>不运行脚本时的答案：B。过期重置仍是 200，旧密码还能登录。</p></noscript>
+</form>
+
+<p class="pager"><a href="06-jwt.html">上一课：JWT 与 current</a><a href="08-resend.html">下一课：重发验证信的三种结果</a></p>
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>

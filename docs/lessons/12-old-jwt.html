@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>改密不使旧 JWT 失效 · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="01-map.html">这棵树谁负责什么</a></li><li><a href="02-columns.html">users 列以 SQLite 为准</a></li><li><a href="03-register.html">注册写入哪些列</a></li><li><a href="04-verify.html">验证令牌没有过期</a></li><li><a href="05-login.html">登录不要求已验证</a></li><li><a href="06-jwt.html">JWT 与 current</a></li><li><a href="07-reset.html">过期重置仍返回 200</a></li><li><a href="08-resend.html">重发验证信的三种结果</a></li><li><a href="09-magic.html">magic link 只收两个域名</a></li><li><a href="10-tokens.html">三种令牌不要混用</a></li><li><a href="11-authz.html">认证通过不等于授权</a></li><li><a href="12-old-jwt.html" aria-current="page">改密不使旧 JWT 失效</a></li><li><a href="../reference/http.html">实测 HTTP 结果</a></li><li><a href="../reference/powershell.html">PowerShell 命令</a></li><li><a href="../reference/untested.html">没测过的边界</a></li><li><a href="../reference/extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      <h1>改密不使旧 JWT 失效</h1>
+<p class="kicker">密码换了，签过名的 JWT 还在有效期内。</p>
+<h2>结果</h2>
+<pre><code>1. 登录，留下 JWT，不把它写进任何公开记录
+2. 完成一次未过期的密码重置
+3. 旧密码登录变为 401，新密码登录为 200
+4. 用第 1 步的 JWT 调用 GET /api/auth/current
+   HTTP 200</code></pre>
+<p>JWT 校验只看签名、算法、过期和意外的 <code>aud</code>：<a href="https://github.com/loco-rs/loco/blob/3ddc279740ebf0516403ca8f7028ce481d616a02/src/auth/jwt.rs#L217-L248">src/auth/jwt.rs:217-248</a>。没有 <code>jti</code>，用户表也没有吊销列表。</p>
+<h2>说明</h2>
+<p><code>reset_password</code> 只换哈希并清空重置列。它不修改已经发出的 JWT，<code>current</code> 也不比较“令牌签发时的密码版本”。所以改密不能当作注销。</p>
+<p>用户行被删掉是另一条路径：签名仍有效，但 <code>find_by_pid</code> 得到 404。那是行不在了，不是令牌被吊销。</p>
+
+<form class="quiz" data-answer="b">
+  <fieldset>
+    <legend>密码重置成功后，重置前签发的 JWT 调用 current，实测是？</legend>
+    <label><input type="radio" name="choice" value="a"> <span class="choice">HTTP 401，因为密码版本已经变了，签名失效　　　　</span></label><label><input type="radio" name="choice" value="b"> <span class="choice">HTTP 200，因为校验不看密码是否后来换过　　　　　</span></label><label><input type="radio" name="choice" value="c"> <span class="choice">HTTP 404，重置会删掉用户行并要求重新注册　　　　</span></label><label><input type="radio" name="choice" value="d"> <span class="choice">HTTP 409，旧 JWT 必须先调用不存在的吊销口　</span></label>
+  </fieldset>
+  <button type="submit">核对</button>
+  <p class="feedback" role="status" aria-live="polite"></p>
+  <noscript><p>不运行脚本时的答案：B。改密后旧 JWT 调 current 仍是 200。</p></noscript>
+</form>
+
+<p class="pager"><a href="11-authz.html">上一课：认证通过不等于授权</a></p>
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>users 列以 SQLite 为准 · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="01-map.html">这棵树谁负责什么</a></li><li><a href="02-columns.html" aria-current="page">users 列以 SQLite 为准</a></li><li><a href="03-register.html">注册写入哪些列</a></li><li><a href="04-verify.html">验证令牌没有过期</a></li><li><a href="05-login.html">登录不要求已验证</a></li><li><a href="06-jwt.html">JWT 与 current</a></li><li><a href="07-reset.html">过期重置仍返回 200</a></li><li><a href="08-resend.html">重发验证信的三种结果</a></li><li><a href="09-magic.html">magic link 只收两个域名</a></li><li><a href="10-tokens.html">三种令牌不要混用</a></li><li><a href="11-authz.html">认证通过不等于授权</a></li><li><a href="12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="../reference/http.html">实测 HTTP 结果</a></li><li><a href="../reference/powershell.html">PowerShell 命令</a></li><li><a href="../reference/untested.html">没测过的边界</a></li><li><a href="../reference/extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      <h1>users 列以 SQLite 为准</h1>
+<p class="kicker">迁移数组和实际表不是同一张清单。</p>
+<h2>结果</h2>
+<pre><code>PRAGMA table_info(users) 的列序
+created_at  timestamp_with_timezone_text  NOT NULL  DEFAULT CURRENT_TIMESTAMP
+updated_at  timestamp_with_timezone_text  NOT NULL  DEFAULT CURRENT_TIMESTAMP
+id          INTEGER                       NOT NULL  PRIMARY KEY AUTOINCREMENT
+pid         uuid_text                     NOT NULL
+email       varchar                       NOT NULL  UNIQUE
+password    varchar                       NOT NULL
+api_key     varchar                       NOT NULL  UNIQUE
+name        varchar                       NOT NULL
+其余令牌和时间列均可 NULL，且没有 UNIQUE</code></pre>
+<p>迁移手写列从 <code>id</code> 到 <code>magic_link_expiration</code>：<a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/migration/src/m20220101_000001_users.rs#L10-L34">saas_app/migration/src/m20220101_000001_users.rs:10-34</a>。时间戳来自框架 <code>create_table</code>：<a href="https://github.com/loco-rs/loco/blob/3ddc279740ebf0516403ca8f7028ce481d616a02/src/schema.rs#L490-L496">src/schema.rs:490-496</a> 和 <a href="https://github.com/loco-rs/loco/blob/3ddc279740ebf0516403ca8f7028ce481d616a02/src/schema.rs#L24-L38">src/schema.rs:24-38</a>。</p>
+<h2>说明</h2>
+<p>唯一索引只有两条自动索引：<code>email</code> 和 <code>api_key</code>。<code>pid</code> 在插入时写成 UUID，表上没有 UNIQUE。没有 <code>disabled</code>、<code>role</code>、<code>refresh_token</code> 列。完整 pragma 在 <code>repro/text/schema.txt</code>。</p>
+<p>Rust 实体把 <code>id</code> 写成 <code>i64</code>：<a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/models/_entities/users.rs#L11-L12">saas_app/src/models/_entities/users.rs:11-12</a>。文件头仍写着 sea-orm-codegen 1.0.0，lock 里的 sea-orm 是 2.0.4。以 PRAGMA 和实体字段为准。</p>
+
+<form class="quiz" data-answer="b">
+  <fieldset>
+    <legend>created_at 从哪里来？</legend>
+    <label><input type="radio" name="choice" value="a"> <span class="choice">迁移数组里写了 created_at，类型是 INTEGER　　　　　　　　　　　</span></label><label><input type="radio" name="choice" value="b"> <span class="choice">框架 create_table 自动加上，带 CURRENT_TIMESTAMP　</span></label><label><input type="radio" name="choice" value="c"> <span class="choice">注册控制器在插入用户之前手动写入该列　　　　　　　　　　　　　　　　　　　　　　　</span></label><label><input type="radio" name="choice" value="d"> <span class="choice">SQLite 对每张表都隐式提供 created_at 列　　　　　　　　　　　　</span></label>
+  </fieldset>
+  <button type="submit">核对</button>
+  <p class="feedback" role="status" aria-live="polite"></p>
+  <noscript><p>不运行脚本时的答案：B。迁移数组没有这列。框架 create_table 会加时间戳。</p></noscript>
+</form>
+
+<p class="pager"><a href="01-map.html">上一课：这棵树谁负责什么</a><a href="03-register.html">下一课：注册写入哪些列</a></p>
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>实测 HTTP 结果 · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="../lessons/01-map.html">这棵树谁负责什么</a></li><li><a href="../lessons/02-columns.html">users 列以 SQLite 为准</a></li><li><a href="../lessons/03-register.html">注册写入哪些列</a></li><li><a href="../lessons/04-verify.html">验证令牌没有过期</a></li><li><a href="../lessons/05-login.html">登录不要求已验证</a></li><li><a href="../lessons/06-jwt.html">JWT 与 current</a></li><li><a href="../lessons/07-reset.html">过期重置仍返回 200</a></li><li><a href="../lessons/08-resend.html">重发验证信的三种结果</a></li><li><a href="../lessons/09-magic.html">magic link 只收两个域名</a></li><li><a href="../lessons/10-tokens.html">三种令牌不要混用</a></li><li><a href="../lessons/11-authz.html">认证通过不等于授权</a></li><li><a href="../lessons/12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="http.html" aria-current="page">实测 HTTP 结果</a></li><li><a href="powershell.html">PowerShell 命令</a></li><li><a href="untested.html">没测过的边界</a></li><li><a href="extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      
+<h1>实测 HTTP 结果</h1>
+<p>Linux 上对 <code>127.0.0.1:43123</code> 的探针。账号使用 example.com。口令、令牌、哈希、api key 和 JWT 没有留在结果里。</p>
+<pre><code>GET /_health	200	{&quot;ok&quot;:true}	
+GET /_ping	200	{&quot;ok&quot;:true}	
+GET /_readiness	200	{&quot;ok&quot;:true}	
+GET /	200	&lt;html-body-redacted&gt;	content-type=None contains_hello=True
+GET /static/image.png	200	bytes=291171	
+POST /api/auth/register unverified-user	200	null	
+db after register unverified	0	row-present	password_prefix_argon2id=True verified_at_null=True verification_token_present=True api_key_prefix_lo=True pid_present=True
+POST /api/auth/login before verify	200	{&quot;keys&quot;: [&quot;is_verified&quot;, &quot;name&quot;, &quot;pid&quot;, &quot;token&quot;], &quot;is_verified&quot;: false, &quot;name&quot;: &quot;Unverified&quot;}	
+POST /api/auth/register main	200	null	
+POST /api/auth/register duplicate	200	null	
+db duplicate email count	0	1	
+GET /api/auth/verify/{invalid}	401	{&quot;error&quot;:&quot;unauthorized&quot;,&quot;description&quot;:&quot;You do not have permission to access this resource&quot;}	
+POST /api/auth/verify (no such route)	404	&lt;!DOCTYPE html&gt;\n&lt;html lang=&quot;en&quot;&gt;\n\n&lt;head&gt;\n    &lt;meta charset=&quot;UTF-8&quot;&gt;\n    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;\n    &lt;title&gt;Welcome to Loco!&lt;/title&gt;\n    &lt;link rel=&quot;icon&quot; type=&quot;image/svg+xml&quot; href=&quot;data:image/svg+xml,%3Csvg width=&#x27;64&#x27; height=&#x27;64&#x27; viewBox=&#x27;0 0 64 64&#x27; fill=&#x27;none&#x27; xmlns=&#x27;http://www.w3.org/2000/svg&#x27;%3E%3Cmask id=&#x27;mask0_293_2&#x27; style=&#x27;mask-type:alpha&#x27;…	
+GET /api/auth/verify/{token} after sent_at backdated	200	null	
+db after verify	0	checked	verified_at_set=True token_cleared=True sent_at_was=True
+GET /api/auth/verify/{token} replay	401	{&quot;error&quot;:&quot;unauthorized&quot;,&quot;description&quot;:&quot;You do not have permission to access this resource&quot;}	
+POST /api/auth/login wrong password	401	{&quot;error&quot;:&quot;unauthorized&quot;,&quot;description&quot;:&quot;You do not have permission to access this resource&quot;}	
+POST /api/auth/login unknown email	401	{&quot;error&quot;:&quot;unauthorized&quot;,&quot;description&quot;:&quot;You do not have permission to access this resource&quot;}	
+POST /api/auth/login valid	200	{&quot;keys&quot;: [&quot;is_verified&quot;, &quot;name&quot;, &quot;pid&quot;, &quot;token&quot;], &quot;is_verified&quot;: true, &quot;name&quot;: &quot;Main Student&quot;, &quot;jwt&quot;: &quot;header_keys=[&#x27;alg&#x27;, &#x27;typ&#x27;] alg=HS512 typ=JWT claim_keys=[&#x27;exp&#x27;, &#x27;pid&#x27;] exp_delta_seconds=604800 extra_claim_count=0&quot;}	
+GET /api/auth/current missing	401	{&quot;error&quot;:&quot;unauthorized&quot;,&quot;description&quot;:&quot;You do not have permission to access this resource&quot;}	
+GET /api/auth/current invalid	401	{&quot;error&quot;:&quot;unauthorized&quot;,&quot;description&quot;:&quot;You do not have permission to access this resource&quot;}	
+GET /api/auth/current bad signature	401	{&quot;error&quot;:&quot;unauthorized&quot;,&quot;description&quot;:&quot;You do not have permission to access this resource&quot;}	
+GET /api/auth/current bearer	200	{&quot;keys&quot;: [&quot;email&quot;, &quot;name&quot;, &quot;pid&quot;], &quot;name&quot;: &quot;Main Student&quot;}	
+POST /api/auth/forgot unknown	200	null	
+POST /api/auth/forgot known	200	null	
+db after forgot	0	checked	reset_token_present=True reset_sent_at_present=True
+POST /api/auth/reset unknown token	200	null	
+POST /api/auth/login still old password after bad reset	200	login-ok-body-redacted	
+POST /api/auth/reset expired token	200	null	
+POST /api/auth/login new password after expired reset	401	{&quot;error&quot;:&quot;unauthorized&quot;,&quot;description&quot;:&quot;You do not have permission to access this resource&quot;}	
+POST /api/auth/login old password after expired reset	200	login-ok-body-redacted	
+POST /api/auth/reset valid	200	null	
+db after valid reset	0	checked	reset_token_cleared=True reset_sent_at_cleared=True password_prefix_argon2id=True
+POST /api/auth/login old password after reset	401	{&quot;error&quot;:&quot;unauthorized&quot;,&quot;description&quot;:&quot;You do not have permission to access this resource&quot;}	
+POST /api/auth/login new password after reset	200	login-ok-body-redacted	
+GET /api/auth/current old jwt after password reset	200	body-redacted	
+POST /api/auth/resend already verified	200	null	
+db resend verified	0	checked	verification_token_still_null=True
+POST /api/auth/resend unverified	200	null	
+db resend unverified	0	checked	token_present=True token_rotated=True
+POST /api/auth/resend unknown	200	null	
+POST /api/auth/magic-link disallowed domain	400	{&quot;error&quot;:&quot;Bad Request&quot;,&quot;description&quot;:&quot;invalid request&quot;}	
+POST /api/auth/magic-link unknown allowed domain	200	{}	
+POST /api/auth/magic-link known	200	{}	
+db magic issued	0	checked	token_len=32 expiration_present=True
+GET /api/auth/magic-link/{invalid}	401	{&quot;error&quot;:&quot;unauthorized&quot;,&quot;description&quot;:&quot;You do not have permission to access this resource&quot;}	
+GET /api/auth/magic-link/{token}	200	{&quot;keys&quot;: [&quot;is_verified&quot;, &quot;name&quot;, &quot;pid&quot;, &quot;token&quot;], &quot;is_verified&quot;: true}	
+db magic consumed	0	checked	token_cleared=True expiration_cleared=True
+GET /api/auth/magic-link/{token} replay	401	{&quot;error&quot;:&quot;unauthorized&quot;,&quot;description&quot;:&quot;You do not have permission to access this resource&quot;}	
+GET /api/auth/magic-link/{token} expired	401	{&quot;error&quot;:&quot;unauthorized&quot;,&quot;description&quot;:&quot;You do not have permission to access this resource&quot;}	
+db magic expired not cleared	0	checked	token_still_present=True
+users columns	0	created_at,updated_at,id,pid,email,password,api_key,name,reset_token,reset_sent_at,email_verification_token,email_verification_sent_at,email_verified_at,magic_link_token,magic_link_expiration	has_disabled=False
+</code></pre>
+<p><code>cargo test</code> 28 项通过，名单在仓库 <code>repro/text/test-results.txt</code>。那是测试进程，不是这个网站。</p>
+
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>

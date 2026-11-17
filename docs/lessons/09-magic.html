@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>magic link 只收两个域名 · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="01-map.html">这棵树谁负责什么</a></li><li><a href="02-columns.html">users 列以 SQLite 为准</a></li><li><a href="03-register.html">注册写入哪些列</a></li><li><a href="04-verify.html">验证令牌没有过期</a></li><li><a href="05-login.html">登录不要求已验证</a></li><li><a href="06-jwt.html">JWT 与 current</a></li><li><a href="07-reset.html">过期重置仍返回 200</a></li><li><a href="08-resend.html">重发验证信的三种结果</a></li><li><a href="09-magic.html" aria-current="page">magic link 只收两个域名</a></li><li><a href="10-tokens.html">三种令牌不要混用</a></li><li><a href="11-authz.html">认证通过不等于授权</a></li><li><a href="12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="../reference/http.html">实测 HTTP 结果</a></li><li><a href="../reference/powershell.html">PowerShell 命令</a></li><li><a href="../reference/untested.html">没测过的边界</a></li><li><a href="../reference/extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      <h1>magic link 只收两个域名</h1>
+<p class="kicker">域名、长度、五分钟、用过即删。</p>
+<h2>结果</h2>
+<pre><code>POST /api/auth/magic-link
+邮箱不以 @example.com 或 @gmail.com 结尾    400 invalid request
+域名合法但没有这个用户                      200 {{}}
+有这个用户                                  200 {{}}
+令牌长度 32，magic_link_expiration 非空
+
+GET /api/auth/magic-link/{{token}}
+不存在                         401
+未过期                         200，字段与登录相同，随后两列被清空
+同一令牌再 GET                 401
+过期列写成 2000-01-01          401，令牌列还在</code></pre>
+<p>域名正则 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/controllers/auth.rs#L16-L19">saas_app/src/controllers/auth.rs:16-19</a>。请求 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/controllers/auth.rs#L181-L205">saas_app/src/controllers/auth.rs:181-205</a>。兑换 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/controllers/auth.rs#L208-L227">saas_app/src/controllers/auth.rs:208-227</a>。常量 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/models/users.rs#L10-L11">saas_app/src/models/users.rs:10-11</a>。</p>
+<h2>说明</h2>
+<p>成功请求返回的是空对象 <code>{}</code>，注册返回的是 <code>null</code>。这是 <code>empty_json</code> 和 <code>json(())</code> 的差别。过期失败不会清掉令牌；兑换成功会先清掉再签发 JWT。没有测刚好 5 分钟。</p>
+
+<form class="quiz" data-answer="b">
+  <fieldset>
+    <legend>magic link 请求一个不存在、但域名合法的邮箱，实测是？</legend>
+    <label><input type="radio" name="choice" value="a"> <span class="choice">HTTP 404，正文说明这个邮箱还没有注册　　　　　　</span></label><label><input type="radio" name="choice" value="b"> <span class="choice">HTTP 200，正文是空对象，且不新建用户　　　　　　</span></label><label><input type="radio" name="choice" value="c"> <span class="choice">HTTP 400，因为只有已验证邮箱才能收链接　　　　　</span></label><label><input type="radio" name="choice" value="d"> <span class="choice">HTTP 200，正文 null，并插入一行空密码用户　</span></label>
+  </fieldset>
+  <button type="submit">核对</button>
+  <p class="feedback" role="status" aria-live="polite"></p>
+  <noscript><p>不运行脚本时的答案：B。未知但域名合法的邮箱返回 200 和空对象。</p></noscript>
+</form>
+
+<p class="pager"><a href="08-resend.html">上一课：重发验证信的三种结果</a><a href="10-tokens.html">下一课：三种令牌不要混用</a></p>
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>

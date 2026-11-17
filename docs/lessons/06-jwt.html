@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JWT 与 current · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="01-map.html">这棵树谁负责什么</a></li><li><a href="02-columns.html">users 列以 SQLite 为准</a></li><li><a href="03-register.html">注册写入哪些列</a></li><li><a href="04-verify.html">验证令牌没有过期</a></li><li><a href="05-login.html">登录不要求已验证</a></li><li><a href="06-jwt.html" aria-current="page">JWT 与 current</a></li><li><a href="07-reset.html">过期重置仍返回 200</a></li><li><a href="08-resend.html">重发验证信的三种结果</a></li><li><a href="09-magic.html">magic link 只收两个域名</a></li><li><a href="10-tokens.html">三种令牌不要混用</a></li><li><a href="11-authz.html">认证通过不等于授权</a></li><li><a href="12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="../reference/http.html">实测 HTTP 结果</a></li><li><a href="../reference/powershell.html">PowerShell 命令</a></li><li><a href="../reference/untested.html">没测过的边界</a></li><li><a href="../reference/extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      <h1>JWT 与 current</h1>
+<p class="kicker">先看令牌里有什么，再看 current 查了什么。</p>
+<h2>结果</h2>
+<pre><code>登录成功后解开的 JWT
+header: typ=JWT, alg=HS512
+claims: pid, exp
+exp 与当时 unix 时间的差：604800 秒
+没有额外 claim
+
+GET /api/auth/current
+缺 Authorization                         401
+Bearer not-a-jwt                          401
+签名段被改坏                              401
+合法 Bearer                               200，字段 pid、name、email
+删掉该用户后再用原 JWT                     404 not_found</code></pre>
+<p>签发 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/models/users.rs#L273-L277">saas_app/src/models/users.rs:273-277</a>。框架生成与校验 <a href="https://github.com/loco-rs/loco/blob/3ddc279740ebf0516403ca8f7028ce481d616a02/src/auth/jwt.rs#L20-L20">HS512</a>、<a href="https://github.com/loco-rs/loco/blob/3ddc279740ebf0516403ca8f7028ce481d616a02/src/auth/jwt.rs#L161-L164">Base64 密钥</a>、<a href="https://github.com/loco-rs/loco/blob/3ddc279740ebf0516403ca8f7028ce481d616a02/src/auth/jwt.rs#L181-L201">generate_token</a>、<a href="https://github.com/loco-rs/loco/blob/3ddc279740ebf0516403ca8f7028ce481d616a02/src/auth/jwt.rs#L217-L248">validate</a>。过期秒数 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/config/development.yaml#L115-L115">saas_app/config/development.yaml:115-115</a>。</p>
+<h2>说明</h2>
+<p><code>current</code> 的提取器是 <code>auth::JWT</code>，只校验签名和过期，不加载用户：<a href="https://github.com/loco-rs/loco/blob/3ddc279740ebf0516403ca8f7028ce481d616a02/src/controller/extractor/auth.rs#L106-L121">src/controller/extractor/auth.rs:106-121</a>。默认读 <code>Authorization: Bearer</code>。然后控制器自己 <code>find_by_pid</code>：<a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/controllers/auth.rs#L162-L165">saas_app/src/controllers/auth.rs:162-165</a>。</p>
+<p>secret 必须是标准 Base64。配置里的默认值是教学占位，不要拿去部署后端。用户已删除时，提取器仍然接受签名，控制器的查询变成 404，不是 401。</p>
+
+<form class="quiz" data-answer="a">
+  <fieldset>
+    <legend>合法 JWT 的 claims 里实测有哪些键？</legend>
+    <label><input type="radio" name="choice" value="a"> <span class="choice">只有 pid 和 exp，算法头是 HS512　　　　　　　</span></label><label><input type="radio" name="choice" value="b"> <span class="choice">pid、exp、role，另外还有 refresh　　　　　</span></label><label><input type="radio" name="choice" value="c"> <span class="choice">pid、email、password，算法头是 RS256　</span></label><label><input type="radio" name="choice" value="d"> <span class="choice">sub、iat、jti，另外有一个吊销编号　　　　　　　　　</span></label>
+  </fieldset>
+  <button type="submit">核对</button>
+  <p class="feedback" role="status" aria-live="polite"></p>
+  <noscript><p>不运行脚本时的答案：A。claims 只有 pid 和 exp，header 的 alg 是 HS512。</p></noscript>
+</form>
+
+<p class="pager"><a href="05-login.html">上一课：登录不要求已验证</a><a href="07-reset.html">下一课：过期重置仍返回 200</a></p>
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>

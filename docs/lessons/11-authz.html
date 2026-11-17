@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>认证通过不等于授权 · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="01-map.html">这棵树谁负责什么</a></li><li><a href="02-columns.html">users 列以 SQLite 为准</a></li><li><a href="03-register.html">注册写入哪些列</a></li><li><a href="04-verify.html">验证令牌没有过期</a></li><li><a href="05-login.html">登录不要求已验证</a></li><li><a href="06-jwt.html">JWT 与 current</a></li><li><a href="07-reset.html">过期重置仍返回 200</a></li><li><a href="08-resend.html">重发验证信的三种结果</a></li><li><a href="09-magic.html">magic link 只收两个域名</a></li><li><a href="10-tokens.html">三种令牌不要混用</a></li><li><a href="11-authz.html" aria-current="page">认证通过不等于授权</a></li><li><a href="12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="../reference/http.html">实测 HTTP 结果</a></li><li><a href="../reference/powershell.html">PowerShell 命令</a></li><li><a href="../reference/untested.html">没测过的边界</a></li><li><a href="../reference/extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      <h1>认证通过不等于授权</h1>
+<p class="kicker">登录成功只证明你是这一个 pid。</p>
+<h2>结果</h2>
+<pre><code>users 表没有 disabled、role、refresh_token
+登录和 current 不读这些不存在的列
+LoginResponse 没有 refresh 字段
+改密、退出、按角色拒绝：这些路由不存在
+
+框架源码里有 session store，可以按用户撤销会话。
+生成出的 App::routes 没有接上那些路由。</code></pre>
+<p>列清单见 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/migration/src/m20220101_000001_users.rs#L10-L34">saas_app/migration/src/m20220101_000001_users.rs:10-34</a> 和 <code>repro/text/schema.txt</code>。路由表 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/controllers/auth.rs#L261-L273">saas_app/src/controllers/auth.rs:261-273</a>。</p>
+<h2>说明</h2>
+<p>认证回答“这个签名是不是这个 pid”。授权回答“这个 pid 能不能做这件事”。当前路由没有第二问。持有有效 JWT 就能读 <code>/api/auth/current</code>，没有角色可以挡。</p>
+<p><code>api_key</code> 会在插入时生成，但这些 HTTP 路由不用它登录。框架的 <code>ApiToken</code> 提取器没有接到生成的路由上。</p>
+
+<form class="quiz" data-answer="b">
+  <fieldset>
+    <legend>这棵生成代码里，授权能力实际是？</legend>
+    <label><input type="radio" name="choice" value="a"> <span class="choice">JWT 里带 role，current 会按角色返回不同字段　</span></label><label><input type="radio" name="choice" value="b"> <span class="choice">没有角色或禁用检查，有效 JWT 就能读 current　　　</span></label><label><input type="radio" name="choice" value="c"> <span class="choice">refresh 路由负责授权，过期前必须先刷新　　　　　　　　</span></label><label><input type="radio" name="choice" value="d"> <span class="choice">session store 已接上，改密会撤销全部会话　　　　</span></label>
+  </fieldset>
+  <button type="submit">核对</button>
+  <p class="feedback" role="status" aria-live="polite"></p>
+  <noscript><p>不运行脚本时的答案：B。没有角色或禁用检查。有效 JWT 可以读 current。</p></noscript>
+</form>
+
+<p class="pager"><a href="10-tokens.html">上一课：三种令牌不要混用</a><a href="12-old-jwt.html">下一课：改密不使旧 JWT 失效</a></p>
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>

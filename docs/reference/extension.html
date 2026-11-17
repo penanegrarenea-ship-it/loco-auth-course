@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>还没做的 notes 设计 · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="../lessons/01-map.html">这棵树谁负责什么</a></li><li><a href="../lessons/02-columns.html">users 列以 SQLite 为准</a></li><li><a href="../lessons/03-register.html">注册写入哪些列</a></li><li><a href="../lessons/04-verify.html">验证令牌没有过期</a></li><li><a href="../lessons/05-login.html">登录不要求已验证</a></li><li><a href="../lessons/06-jwt.html">JWT 与 current</a></li><li><a href="../lessons/07-reset.html">过期重置仍返回 200</a></li><li><a href="../lessons/08-resend.html">重发验证信的三种结果</a></li><li><a href="../lessons/09-magic.html">magic link 只收两个域名</a></li><li><a href="../lessons/10-tokens.html">三种令牌不要混用</a></li><li><a href="../lessons/11-authz.html">认证通过不等于授权</a></li><li><a href="../lessons/12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="http.html">实测 HTTP 结果</a></li><li><a href="powershell.html">PowerShell 命令</a></li><li><a href="untested.html">没测过的边界</a></li><li><a href="extension.html" aria-current="page">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      
+<h1>还没做的 notes 设计</h1>
+<p>下面不是已实现的接口。仓库里没有 <code>notes</code> 表，也没有 <code>/api/notes</code>。</p>
+<pre><code>新迁移，不改 users 的列
+notes
+  id          框架的 PkAuto
+  user_id     非空，指向 users.id，不是 pid
+  body        非空文本
+  created_at / updated_at    create_table 会再加
+
+POST /api/notes    要 Bearer
+GET  /api/notes    只返回这个 user_id 的行</code></pre>
+<p>现有 JWT 只有 <code>pid</code>。处理请求时用 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/models/users.rs#L187-L198">find_by_pid</a> 找到 <code>users.id</code>，再写 <code>notes.user_id</code>。不要把 <code>user_id</code> 放进 claims，这样旧 JWT 仍然可用。</p>
+<h2>授权例子</h2>
+<p>正向：A 的 JWT 创建的笔记，A 再去列表里看得到，因为查询条件是 A 的 <code>users.id</code>。</p>
+<p>反向：B 拿自己的有效 JWT 去要 A 的笔记，签名是对的，但 <code>user_id</code> 对不上，结果应是空列表或 404。这是授权，不是再做一次登录。当前应用没有这个判断，因为笔记还不存在。</p>
+<p>已有的 <code>/api/auth/*</code>、<code>/_health</code>、<code>/_ping</code>、<code>/_readiness</code>、<code>GET /</code> 都不必改。</p>
+
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>重发验证信的三种结果 · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="01-map.html">这棵树谁负责什么</a></li><li><a href="02-columns.html">users 列以 SQLite 为准</a></li><li><a href="03-register.html">注册写入哪些列</a></li><li><a href="04-verify.html">验证令牌没有过期</a></li><li><a href="05-login.html">登录不要求已验证</a></li><li><a href="06-jwt.html">JWT 与 current</a></li><li><a href="07-reset.html">过期重置仍返回 200</a></li><li><a href="08-resend.html" aria-current="page">重发验证信的三种结果</a></li><li><a href="09-magic.html">magic link 只收两个域名</a></li><li><a href="10-tokens.html">三种令牌不要混用</a></li><li><a href="11-authz.html">认证通过不等于授权</a></li><li><a href="12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="../reference/http.html">实测 HTTP 结果</a></li><li><a href="../reference/powershell.html">PowerShell 命令</a></li><li><a href="../reference/untested.html">没测过的边界</a></li><li><a href="../reference/extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      <h1>重发验证信的三种结果</h1>
+<p class="kicker">三种邮箱，三种数据库结果，HTTP 都是 200。</p>
+<h2>结果</h2>
+<pre><code>POST /api/auth/resend-verification-mail
+未知邮箱                         200 null
+已验证用户                       200 null，验证令牌仍是 NULL
+未验证用户                       200 null，令牌换成新值</code></pre>
+<p>控制器 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/controllers/auth.rs#L230-L259">saas_app/src/controllers/auth.rs:230-259</a>。</p>
+<h2>说明</h2>
+<p>未知邮箱直接返回，避免暴露邮箱是否存在。已验证用户不再发信，也不重写令牌。未验证用户再次调用 <code>set_email_verification_sent</code>，所以令牌列会变。这次只比较了前后是否不同，没有记录令牌值。</p>
+<p>进程外读不到 stub 邮箱里的正文。封数由 <code>cargo test</code> 断言：未验证重发后是 2 封，已验证后再重发仍是 1 封。</p>
+
+<form class="quiz" data-answer="b">
+  <fieldset>
+    <legend>已经验证过的用户再请求重发，数据库怎样？</legend>
+    <label><input type="radio" name="choice" value="a"> <span class="choice">HTTP 409，并新写一枚验证令牌到该行　　　　　　　　　　　　　</span></label><label><input type="radio" name="choice" value="b"> <span class="choice">HTTP 200，验证令牌列保持 NULL 不变　　　　　　　　　　</span></label><label><input type="radio" name="choice" value="c"> <span class="choice">HTTP 200，把 email_verified_at 重新清空　</span></label><label><input type="radio" name="choice" value="d"> <span class="choice">HTTP 401，因为已验证用户不能再收验证信　　　　　　　　　　　</span></label>
+  </fieldset>
+  <button type="submit">核对</button>
+  <p class="feedback" role="status" aria-live="polite"></p>
+  <noscript><p>不运行脚本时的答案：B。已验证重发是 200，验证令牌仍为 NULL。</p></noscript>
+</form>
+
+<p class="pager"><a href="07-reset.html">上一课：过期重置仍返回 200</a><a href="09-magic.html">下一课：magic link 只收两个域名</a></p>
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登录不要求已验证 · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="01-map.html">这棵树谁负责什么</a></li><li><a href="02-columns.html">users 列以 SQLite 为准</a></li><li><a href="03-register.html">注册写入哪些列</a></li><li><a href="04-verify.html">验证令牌没有过期</a></li><li><a href="05-login.html" aria-current="page">登录不要求已验证</a></li><li><a href="06-jwt.html">JWT 与 current</a></li><li><a href="07-reset.html">过期重置仍返回 200</a></li><li><a href="08-resend.html">重发验证信的三种结果</a></li><li><a href="09-magic.html">magic link 只收两个域名</a></li><li><a href="10-tokens.html">三种令牌不要混用</a></li><li><a href="11-authz.html">认证通过不等于授权</a></li><li><a href="12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="../reference/http.html">实测 HTTP 结果</a></li><li><a href="../reference/powershell.html">PowerShell 命令</a></li><li><a href="../reference/untested.html">没测过的边界</a></li><li><a href="../reference/extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      <h1>登录不要求已验证</h1>
+<p class="kicker">注释和实测相反的地方就在这里。</p>
+<h2>结果</h2>
+<pre><code>尚未验证，密码正确
+POST /api/auth/login
+HTTP 200
+字段：is_verified=false，另外有 token、pid、name
+
+验证之后，密码正确
+HTTP 200
+is_verified=true
+
+密码错误，或邮箱不存在
+HTTP 401
+同一句 unauthorized 描述，没有原文 &quot;Invalid credentials!&quot;</code></pre>
+<p>登录函数 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/controllers/auth.rs#L137-L159">saas_app/src/controllers/auth.rs:137-159</a>。它上面的注释 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/controllers/auth.rs#L74-L75">saas_app/src/controllers/auth.rs:74-75</a> 写未验证不能登录。响应字段 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86/saas_app/src/views/auth.rs#L5-L22">saas_app/src/views/auth.rs:5-22</a>。</p>
+<h2>说明</h2>
+<p><code>login</code> 只查邮箱和 <code>verify_password</code>。不读 <code>email_verified_at</code>。<code>is_verified</code> 只是把该列是否有值放进 JSON。脚手架测试 <code>can_login_without_verify</code> 也期望 200。</p>
+<p>401 外壳来自框架，不回显控制器里的字符串：<a href="https://github.com/loco-rs/loco/blob/3ddc279740ebf0516403ca8f7028ce481d616a02/src/controller/mod.rs#L227-L235">src/controller/mod.rs:227-235</a>。</p>
+
+<form class="quiz" data-answer="b">
+  <fieldset>
+    <legend>未验证用户用正确密码登录，实测是？</legend>
+    <label><input type="radio" name="choice" value="a"> <span class="choice">HTTP 401，描述里写明邮箱还没有完成验证　　　　　　　　　　　　　　　</span></label><label><input type="radio" name="choice" value="b"> <span class="choice">HTTP 200，JSON 里 is_verified 的值是 false　</span></label><label><input type="radio" name="choice" value="c"> <span class="choice">HTTP 404，验证完成之前数据库里没有该用户　　　　　　　　　　　　　　</span></label><label><input type="radio" name="choice" value="d"> <span class="choice">HTTP 403，因为验证令牌还留在用户那一行里　　　　　　　　　　　　　　</span></label>
+  </fieldset>
+  <button type="submit">核对</button>
+  <p class="feedback" role="status" aria-live="polite"></p>
+  <noscript><p>不运行脚本时的答案：B。未验证登录是 200，is_verified 为 false。</p></noscript>
+</form>
+
+<p class="pager"><a href="04-verify.html">上一课：验证令牌没有过期</a><a href="06-jwt.html">下一课：JWT 与 current</a></p>
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>

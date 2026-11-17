@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>没测过的边界 · Loco 认证课</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="../index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="../index.html">首页</a></li><li><a href="../lessons/01-map.html">这棵树谁负责什么</a></li><li><a href="../lessons/02-columns.html">users 列以 SQLite 为准</a></li><li><a href="../lessons/03-register.html">注册写入哪些列</a></li><li><a href="../lessons/04-verify.html">验证令牌没有过期</a></li><li><a href="../lessons/05-login.html">登录不要求已验证</a></li><li><a href="../lessons/06-jwt.html">JWT 与 current</a></li><li><a href="../lessons/07-reset.html">过期重置仍返回 200</a></li><li><a href="../lessons/08-resend.html">重发验证信的三种结果</a></li><li><a href="../lessons/09-magic.html">magic link 只收两个域名</a></li><li><a href="../lessons/10-tokens.html">三种令牌不要混用</a></li><li><a href="../lessons/11-authz.html">认证通过不等于授权</a></li><li><a href="../lessons/12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="http.html">实测 HTTP 结果</a></li><li><a href="powershell.html">PowerShell 命令</a></li><li><a href="untested.html" aria-current="page">没测过的边界</a></li><li><a href="extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      
+<h1>没测过的边界</h1>
+<ul>
+  <li>Windows 编译、<code>cargo test</code> 和 PowerShell 实际执行。</li>
+  <li><code>--os windows</code> 那棵树的编译。只比较过文件差。</li>
+  <li>生产配置启动，以及任何真实 SMTP。</li>
+  <li>重置令牌刚好 30 分钟、magic link 刚好 5 分钟。</li>
+  <li>stub 邮件的正文和链接格式。进程外读不到那封信，测试只断言封数，正文快照是注释掉的。</li>
+  <li><code>DownloadWorker</code> 的任务执行。它被注册了，<code>tests/workers/mod.rs</code> 是空模块。</li>
+  <li>框架里的 session 和 OAuth。生成的路由没有接上。</li>
+  <li>把用户标成禁用后再登录。没有这个列，做不了这个实验。</li>
+</ul>
+<p>已经测过的相反事实：未验证可以登录；过期重置返回 200 且不改密码；验证令牌没有过期；magic link 有域名限制；改密后旧 JWT 仍能读 current。</p>
+
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="../assets/site.js"></script>
+</body>
+</html>
