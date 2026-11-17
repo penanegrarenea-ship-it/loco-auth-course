@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>稍后打开 Pages · Loco 认证课</title>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <div class="wrap">
+    <header class="site">
+      <p><a href="index.html">Loco 认证课</a></p>
+      <p>静态页，不运行 Rust，不收集回答。</p>
+    </header>
+    <nav aria-label="课程"><ol><li><a href="index.html">首页</a></li><li><a href="lessons/01-map.html">这棵树谁负责什么</a></li><li><a href="lessons/02-columns.html">users 列以 SQLite 为准</a></li><li><a href="lessons/03-register.html">注册写入哪些列</a></li><li><a href="lessons/04-verify.html">验证令牌没有过期</a></li><li><a href="lessons/05-login.html">登录不要求已验证</a></li><li><a href="lessons/06-jwt.html">JWT 与 current</a></li><li><a href="lessons/07-reset.html">过期重置仍返回 200</a></li><li><a href="lessons/08-resend.html">重发验证信的三种结果</a></li><li><a href="lessons/09-magic.html">magic link 只收两个域名</a></li><li><a href="lessons/10-tokens.html">三种令牌不要混用</a></li><li><a href="lessons/11-authz.html">认证通过不等于授权</a></li><li><a href="lessons/12-old-jwt.html">改密不使旧 JWT 失效</a></li><li><a href="reference/http.html">实测 HTTP 结果</a></li><li><a href="reference/powershell.html">PowerShell 命令</a></li><li><a href="reference/untested.html">没测过的边界</a></li><li><a href="reference/extension.html">还没做的 notes 设计</a></li></ol></nav>
+    <main id="main">
+      
+<h1>稍后打开 Pages</h1>
+<p>课程页已经在仓库的 <code>docs/</code> 里。GitHub Pages 还没有打开。不要把任何主机名当成已经可用的学习地址。</p>
+<h2>所有者以后自己做的一次设置</h2>
+<ol>
+  <li>打开仓库 Settings 里的 Pages。</li>
+  <li>Build and deployment 的 Source 选 Deploy from a branch。</li>
+  <li>Branch 选 <code>main</code>，文件夹选 <code>/docs</code>，保存。</li>
+  <li>用设置页当时显示的站点地址做检查。地址以那一页为准。</li>
+</ol>
+<h2>保存之后要看的四个地址</h2>
+<p>把 GitHub 显示的站点根记成 <code>SITE</code>。下面四个都应是 HTTP 200，而且页面能带上样式和脚本：</p>
+<ul>
+  <li><code>SITE/</code>，正文里能看到课程标题。</li>
+  <li><code>SITE/lessons/05-login.html</code></li>
+  <li><code>SITE/assets/site.css</code></li>
+  <li><code>SITE/assets/site.js</code></li>
+</ul>
+<p>在这四个结果出现之前，课程仍然只是 GitHub 上的文件：<a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/main/docs/index.html">docs/index.html</a>。离线时打开本目录的 <code>index.html</code> 即可。</p>
+
+      <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
+      <footer>
+        <p>源码提交 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63</a>。
+        框架 <a href="https://github.com/loco-rs/loco/commit/3ddc279740ebf0516403ca8f7028ce481d616a02">3ddc279740eb</a>。
+        本站不能代替本机的 <code>cargo loco start</code>。</p>
+      </footer>
+    </main>
+  </div>
+  <script src="assets/site.js"></script>
+</body>
+</html>

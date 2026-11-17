@@ -14,6 +14,6 @@
 | sea-orm | 2.0.4 |
 | argon2 | 0.5.3 |
 
-私有草稿上的基线提交是 `44039154416aed32ce4a96a901d26ec6f2e9c9c8`。公开仓库是新的历史，不包含那条历史。公开源码提交见课程页脚。
+公开源码提交是 `9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86`。课里的行号链接指向这一次提交。
 
 框架行号核对过 crates.io 上的 `loco-rs` 1.3.1，并确认这些路径在上游提交上返回 200：`src/auth/jwt.rs`、`src/hash.rs`、`src/boot.rs`、`src/schema.rs`、`src/controller/monitoring.rs`、`src/controller/extractor/auth.rs`、`src/controller/mod.rs`。

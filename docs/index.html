@@ -18,12 +18,13 @@
       
 <h1>看这棵 saas_app 实际做了什么</h1>
 <p class="kicker">给已经会生成 Loco 应用的人。每课先放代码或 HTTP 结果，再解释。不教安装，也不教一套新的 CRUD。</p>
-<p>页面由 GitHub Pages 托管。它不能注册、不能登录、不能签发 JWT。Rust API 在本机用 <code>cargo loco start</code> 跑。开发配置里的 JWT 默认值是教学占位，不要用它部署后端。</p>
+<p>这些是普通 HTML。GitHub Pages 还没有打开，所以不要把某个网站地址当成已经可用。离线时直接打开本目录的 <code>index.html</code>。Rust API 仍要在本机用 <code>cargo loco start</code> 跑。开发配置里的 JWT 默认值是教学占位，不要用它部署后端。</p>
+<p>所有者稍后打开 Pages 的步骤在 <a href="handoff.html">handoff.html</a>。打开之后要用 GitHub 设置页显示的地址做检查，不要事先编造主机名。</p>
 <h2>课</h2>
 <ol><li><a href="lessons/01-map.html">这棵树谁负责什么</a></li><li><a href="lessons/02-columns.html">users 列以 SQLite 为准</a></li><li><a href="lessons/03-register.html">注册写入哪些列</a></li><li><a href="lessons/04-verify.html">验证令牌没有过期</a></li><li><a href="lessons/05-login.html">登录不要求已验证</a></li><li><a href="lessons/06-jwt.html">JWT 与 current</a></li><li><a href="lessons/07-reset.html">过期重置仍返回 200</a></li><li><a href="lessons/08-resend.html">重发验证信的三种结果</a></li><li><a href="lessons/09-magic.html">magic link 只收两个域名</a></li><li><a href="lessons/10-tokens.html">三种令牌不要混用</a></li><li><a href="lessons/11-authz.html">认证通过不等于授权</a></li><li><a href="lessons/12-old-jwt.html">改密不使旧 JWT 失效</a></li></ol>
 <h2>参考</h2>
 <ul><li><a href="reference/http.html">实测 HTTP 结果</a></li><li><a href="reference/powershell.html">PowerShell 命令</a></li><li><a href="reference/untested.html">没测过的边界</a></li><li><a href="reference/extension.html">还没做的 notes 设计</a></li></ul>
-<p>公开源码提交是 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86</a>。私有草稿基线是 <code>44039154416aed32ce4a96a901d26ec6f2e9c9c8</code>，那条历史不在这个仓库里。</p>
+<p>公开源码提交是 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86">9d99c8f53a63dc9b4c7582ec9dc061f141ee1f86</a>。课里的行号链接指向这一次提交。</p>
 
       <p class="ask">还有疑问就在对话里问。这个页面没有聊天窗口，也不保存你的选择。</p>
       <footer>

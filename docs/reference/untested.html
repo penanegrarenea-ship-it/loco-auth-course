@@ -24,6 +24,7 @@
   <li>重置令牌刚好 30 分钟、magic link 刚好 5 分钟。</li>
   <li>stub 邮件的正文和链接格式。进程外读不到那封信，测试只断言封数，正文快照是注释掉的。</li>
   <li><code>DownloadWorker</code> 的任务执行。它被注册了，<code>tests/workers/mod.rs</code> 是空模块。</li>
+  <li>公开源码提交里没有 <code>saas_app/assets/static/image.png</code>。本地缺这张图时，<code>GET /static/image.png</code> 不会回到当时的 200。</li>
   <li>框架里的 session 和 OAuth。生成的路由没有接上。</li>
   <li>把用户标成禁用后再登录。没有这个列，做不了这个实验。</li>
 </ul>

@@ -1,6 +1,25 @@
 # Windows 11 上的复现命令
 
-下面是给 Windows 11 PowerShell 的命令。本仓库的编译、迁移、`cargo test` 和 HTTP 探针都在 Linux 上跑过，没有在 Windows 上跑过。Windows 只做了生成器文件差异对比（Linux 上用 `--os windows` 再生成一棵树，没有编译）。
+下面的命令没有在 Windows 上执行。Linux 上核对过同一套迁移、测试和 HTTP 行为。
+
+运行这个公开仓库时，应用在 `saas_app` 子目录：
+
+```powershell
+git clone https://github.com/penanegrarenea-ship-it/loco-auth-course.git
+Set-Location loco-auth-course\saas_app
+# 可选。不要把 JWT_SECRET 打到屏幕上。
+# $env:JWT_SECRET = "<standard-base64>"
+$env:PORT = "43123"
+$env:BINDING = "127.0.0.1"
+cargo run --locked -- db migrate
+cargo run --locked -- routes
+cargo test --locked
+cargo run --locked -- start
+```
+
+`cargo install loco --version 1.3.1 --locked` 只在重新生成一棵树时需要。`mailer.stub` 在开发配置里已经是 true。缺的首页图用仓库根目录的 `repro/restore-image.ps1` 手动还原，启动应用不会下载它。
+
+下面是更早的生成器说明，同样没有在 Windows 上编译。
 
 需要 rustc 1.94 或更新。`loco` 1.3.1 的 MSRV 是 1.94。本机镜像自带的 1.83.0 不能编译这个生成器。
 

@@ -578,12 +578,13 @@ LoginResponse 没有 refresh 字段
     home = f"""
 <h1>看这棵 saas_app 实际做了什么</h1>
 <p class="kicker">给已经会生成 Loco 应用的人。每课先放代码或 HTTP 结果，再解释。不教安装，也不教一套新的 CRUD。</p>
-<p>页面由 GitHub Pages 托管。它不能注册、不能登录、不能签发 JWT。Rust API 在本机用 <code>cargo loco start</code> 跑。开发配置里的 JWT 默认值是教学占位，不要用它部署后端。</p>
+<p>这些是普通 HTML。GitHub Pages 还没有打开，所以不要把某个网站地址当成已经可用。离线时直接打开本目录的 <code>index.html</code>。Rust API 仍要在本机用 <code>cargo loco start</code> 跑。开发配置里的 JWT 默认值是教学占位，不要用它部署后端。</p>
+<p>所有者稍后打开 Pages 的步骤在 <a href="handoff.html">handoff.html</a>。打开之后要用 GitHub 设置页显示的地址做检查，不要事先编造主机名。</p>
 <h2>课</h2>
 <ol>{home_items}</ol>
 <h2>参考</h2>
 <ul>{ref_items}</ul>
-<p>公开源码提交是 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/{SHA}">{SHA}</a>。私有草稿基线是 <code>44039154416aed32ce4a96a901d26ec6f2e9c9c8</code>，那条历史不在这个仓库里。</p>
+<p>公开源码提交是 <a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/commit/{SHA}">{SHA}</a>。课里的行号链接指向这一次提交。</p>
 """
     index = layout("首页", "", home, 0)
 
@@ -596,20 +597,20 @@ LoginResponse 没有 refresh 字段
 
     ps_ref = layout("PowerShell 命令", "ref-powershell", f"""
 <h1>PowerShell 命令</h1>
-<p>这些命令没有在 Windows 上执行。Linux 上用对应的环境变量和 curl 核对过行为。</p>
-{code('''rustc --version
-cargo install loco --version 1.3.1 --locked
-loco new --name saas_app --db sqlite --bg async --assets serverside --os linux
-Set-Location saas_app
-$env:JWT_SECRET = "<standard-base64>"
+<p>下面是运行<strong>这个公开仓库</strong>里的 <code>saas_app</code>。Windows 11 上没有执行过。Linux 上同一套迁移、测试和 HTTP 行为已经核对过。</p>
+{code('''git clone https://github.com/penanegrarenea-ship-it/loco-auth-course.git
+Set-Location loco-auth-course\\saas_app
+# 可选。不设置时使用配置里的教学占位。不要把值打到屏幕上。
+# $env:JWT_SECRET = "<standard-base64>"
 $env:PORT = "43123"
 $env:BINDING = "127.0.0.1"
-cargo loco db migrate
-cargo loco routes
-cargo test
-cargo loco start''')}
-<p>要得到与公开树相同的文件，Windows 上必须写 <code>--os linux</code>。省略时默认是 <code>windows</code>，会多出 <code>src/bin/tool.rs</code>。本次没有编译那棵树。</p>
-<p>预期：迁移日志出现 <code>m20220101_000001_users</code>；<code>routes</code> 含 9 个 <code>/api/auth</code> 路径以及 <code>/_health</code>、<code>/_ping</code>、<code>/_readiness</code> 和 <code>GET /</code>；<code>start</code> 监听所设端口。登录响应里的 token 不要记下来。</p>
+cargo run --locked -- db migrate
+cargo run --locked -- routes
+cargo test --locked
+cargo run --locked -- start''')}
+<p><code>cargo install loco --version 1.3.1 --locked</code> 只在要重新生成应用时需要。运行已有的 <code>saas_app</code> 目录不用再安装生成器。</p>
+<p><code>config/development.yaml</code> 里 <code>mailer.stub</code> 已是 true，进程不连接 SMTP。迁移会创建本目录下的 SQLite 文件，并应用 <code>m20220101_000001_users</code>。不要启动生产配置，不要填写真实邮箱账号。登录响应里的 token 不要记下来。</p>
+<p>首页用的静态图不在公开源码提交里。需要时在仓库根目录手动运行 <code>repro/restore-image.ps1</code>。它会先核对 SHA256，再放入 <code>saas_app\\assets\\static\\image.png</code>。应用启动不会自己下载。</p>
 """, 1)
 
     untested = layout("没测过的边界", "ref-untested", """
@@ -621,6 +622,7 @@ cargo loco start''')}
   <li>重置令牌刚好 30 分钟、magic link 刚好 5 分钟。</li>
   <li>stub 邮件的正文和链接格式。进程外读不到那封信，测试只断言封数，正文快照是注释掉的。</li>
   <li><code>DownloadWorker</code> 的任务执行。它被注册了，<code>tests/workers/mod.rs</code> 是空模块。</li>
+  <li>公开源码提交里没有 <code>saas_app/assets/static/image.png</code>。本地缺这张图时，<code>GET /static/image.png</code> 不会回到当时的 200。</li>
   <li>框架里的 session 和 OAuth。生成的路由没有接上。</li>
   <li>把用户标成禁用后再登录。没有这个列，做不了这个实验。</li>
 </ul>
@@ -660,6 +662,27 @@ GET  /api/notes    只返回这个 user_id 的行''')}
     write(DOCS / "reference" / "powershell.html", ps_ref)
     write(DOCS / "reference" / "untested.html", untested)
     write(DOCS / "reference" / "extension.html", extension)
+    handoff = layout("稍后打开 Pages", "", f"""
+<h1>稍后打开 Pages</h1>
+<p>课程页已经在仓库的 <code>docs/</code> 里。GitHub Pages 还没有打开。不要把任何主机名当成已经可用的学习地址。</p>
+<h2>所有者以后自己做的一次设置</h2>
+<ol>
+  <li>打开仓库 Settings 里的 Pages。</li>
+  <li>Build and deployment 的 Source 选 Deploy from a branch。</li>
+  <li>Branch 选 <code>main</code>，文件夹选 <code>/docs</code>，保存。</li>
+  <li>用设置页当时显示的站点地址做检查。地址以那一页为准。</li>
+</ol>
+<h2>保存之后要看的四个地址</h2>
+<p>把 GitHub 显示的站点根记成 <code>SITE</code>。下面四个都应是 HTTP 200，而且页面能带上样式和脚本：</p>
+<ul>
+  <li><code>SITE/</code>，正文里能看到课程标题。</li>
+  <li><code>SITE/lessons/05-login.html</code></li>
+  <li><code>SITE/assets/site.css</code></li>
+  <li><code>SITE/assets/site.js</code></li>
+</ul>
+<p>在这四个结果出现之前，课程仍然只是 GitHub 上的文件：<a href="https://github.com/penanegrarenea-ship-it/loco-auth-course/blob/main/docs/index.html">docs/index.html</a>。离线时打开本目录的 <code>index.html</code> 即可。</p>
+""", 0)
+    write(DOCS / "handoff.html", handoff)
 
     missing = []
     for page in DOCS.rglob("*.html"):
