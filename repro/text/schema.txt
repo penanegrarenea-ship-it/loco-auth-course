@@ -1,0 +1,62 @@
+# SQLite schema after `cargo loco db migrate`
+# file: saas_app/saas_app_development.sqlite (not committed)
+# Linux sqlite 3.45.1
+# No row contents are included.
+
+tables:
+  seaql_migrations
+  sqlite_sequence
+  users
+
+PRAGMA table_info(users):
+cid  name                         type                            notnull  dflt                 pk
+0    created_at                   timestamp_with_timezone_text    1        CURRENT_TIMESTAMP    0
+1    updated_at                   timestamp_with_timezone_text    1        CURRENT_TIMESTAMP    0
+2    id                           INTEGER                         1        NULL                 1
+3    pid                          uuid_text                       1        NULL                 0
+4    email                        varchar                         1        NULL                 0
+5    password                     varchar                         1        NULL                 0
+6    api_key                      varchar                         1        NULL                 0
+7    name                         varchar                         1        NULL                 0
+8    reset_token                  varchar                         0        NULL                 0
+9    reset_sent_at                timestamp_with_timezone_text    0        NULL                 0
+10   email_verification_token     varchar                         0        NULL                 0
+11   email_verification_sent_at   timestamp_with_timezone_text    0        NULL                 0
+12   email_verified_at            timestamp_with_timezone_text    0        NULL                 0
+13   magic_link_token             varchar                         0        NULL                 0
+14   magic_link_expiration        timestamp_with_timezone_text    0        NULL                 0
+
+PRAGMA index_list(users):
+seq  name                      unique  origin  partial
+0    sqlite_autoindex_users_2  1       u       0
+1    sqlite_autoindex_users_1  1       u       0
+
+PRAGMA index_info:
+sqlite_autoindex_users_2 -> column 6 api_key
+sqlite_autoindex_users_1 -> column 4 email
+
+No index on pid, reset_token, email_verification_token, or magic_link_token.
+
+CREATE TABLE "users" (
+  "created_at" timestamp_with_timezone_text NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" timestamp_with_timezone_text NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+  "pid" uuid_text NOT NULL,
+  "email" varchar NOT NULL UNIQUE,
+  "password" varchar NOT NULL,
+  "api_key" varchar NOT NULL UNIQUE,
+  "name" varchar NOT NULL,
+  "reset_token" varchar NULL,
+  "reset_sent_at" timestamp_with_timezone_text NULL,
+  "email_verification_token" varchar NULL,
+  "email_verification_sent_at" timestamp_with_timezone_text NULL,
+  "email_verified_at" timestamp_with_timezone_text NULL,
+  "magic_link_token" varchar NULL,
+  "magic_link_expiration" timestamp_with_timezone_text NULL
+)
+
+PRAGMA table_info(seaql_migrations):
+0 version varchar NOT NULL PRIMARY KEY
+1 applied_at INTEGER NOT NULL
+
+applied migration name only: m20220101_000001_users

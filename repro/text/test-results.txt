@@ -1,0 +1,45 @@
+# Linux checks. Not run on Windows.
+# rustc 1.100.0 (0ef1bc386 2026-11-09)
+# app version from `cargo loco version`: 0.1.0 (dev)
+
+cargo test --offline -- --test-threads=4
+result: 28 passed; 0 failed; 0 ignored
+unit tests (lib, bin): 0 tests
+doc-tests: 0 tests
+
+integration tests/mod.rs (28):
+models::users::can_find_by_email
+models::users::can_find_by_pid
+models::users::can_create_with_password
+models::users::can_reset_password
+models::users::can_set_forgot_password_sent
+models::users::can_verification_token
+models::users::can_verified
+models::users::handle_create_with_password_with_duplicate
+models::users::magic_link
+models::users::test_can_validate_model
+requests::auth::can_auth_with_magic_link
+requests::auth::can_login_without_verify
+requests::auth::can_login_with_verify_invalid_password
+requests::auth::can_register
+requests::auth::can_reject_invalid_magic_link_token
+requests::auth::can_get_current_user
+requests::auth::can_login_with_verify_valid_password
+requests::auth::can_reject_invalid_email
+requests::auth::can_reset_password
+requests::auth::can_resend_verification_email
+requests::auth::cannot_resend_email_if_already_verified
+requests::auth::login_with_un_existing_email
+requests::auth::invalid_verification_token
+requests::page::can_get_home_page
+views::render::renders_home_view_with_i18n
+tasks::user_create::test_can_run_user_create
+tasks::user_create::test_user_email_already_exists
+tasks::user_delete::can_run_user_delete_by_pid
+
+tests/workers/mod.rs is an empty module. No worker test ran.
+
+Live HTTP probe: docs/text/http-results.txt
+Server: PORT=43123 BINDING=127.0.0.1 cargo loco start
+Mail: development stub=true, no SMTP listener, no external delivery.
+Accounts: *@example.com only. Passwords, tokens, hashes, API keys, JWTs omitted.

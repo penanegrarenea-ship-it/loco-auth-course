@@ -1,0 +1,24 @@
+# cargo loco routes
+# environment: development
+# host: Linux, loco generator 1.3.1, app saas_app 0.1.0
+# command: cargo loco routes
+
+/ GET                                              
+/_health GET                                       /_health
+/_ping GET                                         /_ping
+/_readiness GET                                    /_readiness
+/api
+   └─ /auth
+      ├─ /current GET                              /api/auth/current
+      ├─ /forgot POST                              /api/auth/forgot
+      ├─ /login POST                               /api/auth/login
+      ├─ /magic-link
+      │  ├─ POST                                   /api/auth/magic-link
+      │  └─ /{token} GET                           /api/auth/magic-link/{token}
+      ├─ /register POST                            /api/auth/register
+      ├─ /resend-verification-mail POST            /api/auth/resend-verification-mail
+      ├─ /reset POST                               /api/auth/reset
+      └─ /verify/{token} GET                       /api/auth/verify/{token}
+
+# Server boot log listed the same methods, plus middleware names:
+# limit_payload, catch_panic, etag, static, logger, request_id, fallback, powered_by

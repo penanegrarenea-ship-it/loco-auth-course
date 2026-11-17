@@ -1,0 +1,52 @@
+GET /_health	200	{"ok":true}	
+GET /_ping	200	{"ok":true}	
+GET /_readiness	200	{"ok":true}	
+GET /	200	<html-body-redacted>	content-type=None contains_hello=True
+GET /static/image.png	200	bytes=291171	
+POST /api/auth/register unverified-user	200	null	
+db after register unverified	0	row-present	password_prefix_argon2id=True verified_at_null=True verification_token_present=True api_key_prefix_lo=True pid_present=True
+POST /api/auth/login before verify	200	{"keys": ["is_verified", "name", "pid", "token"], "is_verified": false, "name": "Unverified"}	
+POST /api/auth/register main	200	null	
+POST /api/auth/register duplicate	200	null	
+db duplicate email count	0	1	
+GET /api/auth/verify/{invalid}	401	{"error":"unauthorized","description":"You do not have permission to access this resource"}	
+POST /api/auth/verify (no such route)	404	<!DOCTYPE html>\n<html lang="en">\n\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Welcome to Loco!</title>\n    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cmask id='mask0_293_2' style='mask-type:alpha'…	
+GET /api/auth/verify/{token} after sent_at backdated	200	null	
+db after verify	0	checked	verified_at_set=True token_cleared=True sent_at_was=True
+GET /api/auth/verify/{token} replay	401	{"error":"unauthorized","description":"You do not have permission to access this resource"}	
+POST /api/auth/login wrong password	401	{"error":"unauthorized","description":"You do not have permission to access this resource"}	
+POST /api/auth/login unknown email	401	{"error":"unauthorized","description":"You do not have permission to access this resource"}	
+POST /api/auth/login valid	200	{"keys": ["is_verified", "name", "pid", "token"], "is_verified": true, "name": "Main Student", "jwt": "header_keys=['alg', 'typ'] alg=HS512 typ=JWT claim_keys=['exp', 'pid'] exp_delta_seconds=604800 extra_claim_count=0"}	
+GET /api/auth/current missing	401	{"error":"unauthorized","description":"You do not have permission to access this resource"}	
+GET /api/auth/current invalid	401	{"error":"unauthorized","description":"You do not have permission to access this resource"}	
+GET /api/auth/current bad signature	401	{"error":"unauthorized","description":"You do not have permission to access this resource"}	
+GET /api/auth/current bearer	200	{"keys": ["email", "name", "pid"], "name": "Main Student"}	
+POST /api/auth/forgot unknown	200	null	
+POST /api/auth/forgot known	200	null	
+db after forgot	0	checked	reset_token_present=True reset_sent_at_present=True
+POST /api/auth/reset unknown token	200	null	
+POST /api/auth/login still old password after bad reset	200	login-ok-body-redacted	
+POST /api/auth/reset expired token	200	null	
+POST /api/auth/login new password after expired reset	401	{"error":"unauthorized","description":"You do not have permission to access this resource"}	
+POST /api/auth/login old password after expired reset	200	login-ok-body-redacted	
+POST /api/auth/reset valid	200	null	
+db after valid reset	0	checked	reset_token_cleared=True reset_sent_at_cleared=True password_prefix_argon2id=True
+POST /api/auth/login old password after reset	401	{"error":"unauthorized","description":"You do not have permission to access this resource"}	
+POST /api/auth/login new password after reset	200	login-ok-body-redacted	
+GET /api/auth/current old jwt after password reset	200	body-redacted	
+POST /api/auth/resend already verified	200	null	
+db resend verified	0	checked	verification_token_still_null=True
+POST /api/auth/resend unverified	200	null	
+db resend unverified	0	checked	token_present=True token_rotated=True
+POST /api/auth/resend unknown	200	null	
+POST /api/auth/magic-link disallowed domain	400	{"error":"Bad Request","description":"invalid request"}	
+POST /api/auth/magic-link unknown allowed domain	200	{}	
+POST /api/auth/magic-link known	200	{}	
+db magic issued	0	checked	token_len=32 expiration_present=True
+GET /api/auth/magic-link/{invalid}	401	{"error":"unauthorized","description":"You do not have permission to access this resource"}	
+GET /api/auth/magic-link/{token}	200	{"keys": ["is_verified", "name", "pid", "token"], "is_verified": true}	
+db magic consumed	0	checked	token_cleared=True expiration_cleared=True
+GET /api/auth/magic-link/{token} replay	401	{"error":"unauthorized","description":"You do not have permission to access this resource"}	
+GET /api/auth/magic-link/{token} expired	401	{"error":"unauthorized","description":"You do not have permission to access this resource"}	
+db magic expired not cleared	0	checked	token_still_present=True
+users columns	0	created_at,updated_at,id,pid,email,password,api_key,name,reset_token,reset_sent_at,email_verification_token,email_verification_sent_at,email_verified_at,magic_link_token,magic_link_expiration	has_disabled=False
